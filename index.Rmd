@@ -1,0 +1,164 @@
+---
+title: "FIM_October"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    navbar:
+      - { title: "About", href: "https://example.com/about" }
+ 
+    
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(plotly)
+library(ggmap)
+library(leaflet)
+library(tidyverse)
+
+```
+
+
+
+``` {r include=FALSE}
+mydata2 <- read.csv('FCECOLI_OctFIM.csv', header = TRUE)
+mydata2$Latitude <- as.numeric(mydata2$Latitude)
+head(mydata2)
+mydata2$WatchList <- as.factor(mydata2$WatchList)
+mydata2$Watch_Action <- as.factor(mydata2$Watch_Action)
+
+str(mydata2)
+
+df <- read.csv("FCECOLI_FIM1yr.csv", header = TRUE)
+head(df)
+
+df$WatchList <- as.factor(df$WatchList)
+df$Storm <- as.factor(df$Storm)
+str(df)
+
+
+```
+
+Fecal coliform/E.coli counts
+=====================================
+
+
+row {data-width=350}
+-----------------------------------------------------------------------
+
+### Fecal coliform and E.coli counts for October 2020 across 24 Fixed Interval sampling locations
+
+
+```{r}
+h <- 400
+fig <- ggplot() +
+  geom_point(data = mydata2, aes(x = Site, y=FC, size=FC), 
+             colour = 'blue', alpha = 0.5) +
+  geom_point(data = mydata2, aes(x=Site,y=E.Coli, size=E.Coli),
+             colour = 'green', alpha = 0.5) +
+  geom_hline(yintercept = h, colour = 'red', linetype = 'dashed') +
+   annotate("text", x = "MC14A", y = h, label = 400) +
+  
+  xlab('Site') +
+  ylab('Bacteria (CFU/100 ml)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  
+
+
+ggplotly(fig, tooltip = c('y', 'x'))
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+###  Action/Watch list (Flagged sites exceeded the single sample fecal coliform threshold of 400 cfu/100 ml during ambient conditions)
+
+```{r}
+pal <- colorFactor(c("blue", "red"), domain = mydata2$WatchList)
+
+
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  #addMarkers(lng = mydata2$Longitude, lat = mydata2$Latitude)
+  addCircles(lng = mydata2$Longitude, lat = mydata2$Latitude, 
+             weight = 12, label = mydata2$WatchList, popup = mydata2$Site, 
+             color = pal(mydata2$WatchList), labelOptions = labelOptions(noHide = FALSE))%>%
+  addLegend("topright", pal = pal, values = mydata2$WatchList)
+  
+m  # Print the map
+
+
+
+```
+
+###  Fecal coliform and E.Coli counts at MY10 (Previous year)
+
+```{r }
+
+pl <- ggplot(data = df, aes(x = Coldate, y = Result, fill = Bacteria, label = Storm)) +
+      geom_col(position = "dodge") + xlab("Date") + ylab("Bacteria cfu/100 ml") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+   
+      
+
+ggplotly(pl)
+
+
+```
+
+Turbidity {data-orientation=columns}
+=====================================
+
+row {data-width=350}
+-----------------------------------------------------------------------
+
+### Turbidity measurements for October 2020 across 24 Fixed Interval sampling locations
+
+```{r}
+h <- 50
+fig <- ggplot() +
+  geom_point(data = mydata2, aes(x = Site, y=Turbidity, size=Turbidity), 
+             colour = 'brown', alpha = 0.5) + 
+   geom_hline(yintercept = h, colour = 'red', linetype = 'dashed') +
+   annotate("text", x = "MC14A", y = h, label = 50) +
+  xlab('Site') +
+  ylab('Turbidity (NTU)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+ggplotly(fig, tooltip = c('y', 'x'))
+```
+
+Column {}
+----------------------------------
+
+
+###  Action/Watch list (<=25 is ok, >25 is Watch, >50 is Action)
+
+```{r}
+pal <- colorFactor(c("red", "blue", "#006400"), domain = mydata2$Watch_Action)
+
+
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  #addMarkers(lng = mydata2$Longitude, lat = mydata2$Latitude)
+  addCircles(lng = mydata2$Longitude, lat = mydata2$Latitude, 
+             weight = 12, label = mydata2$Watch_Action, popup = mydata2$Site, 
+             color = pal(mydata2$Watch_Action), labelOptions = labelOptions(noHide = FALSE))%>%
+  addLegend("topright", pal = pal, values = mydata2$Watch_Action)
+  
+m  # Print the map
+
+
+
+```
+
+###  Historical readings for Watch/Action sites
+
+
+
+
+

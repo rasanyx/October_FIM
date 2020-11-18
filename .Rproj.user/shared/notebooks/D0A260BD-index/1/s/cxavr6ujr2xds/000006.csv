@@ -1,0 +1,3 @@
+"0","mydata2 <- read.csv('FCECOLI_OctFIM.csv', header = TRUE)"
+"0","mydata2$Latitude <- as.numeric(mydata2$Latitude)"
+"0","head(mydata2)"
